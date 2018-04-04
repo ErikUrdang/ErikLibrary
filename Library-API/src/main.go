@@ -12,7 +12,7 @@ package main
 // - GET	Get a book by ISBN 		http://localhost:8000/books/0451527127
 // - PUT 	Add a book				http://localhost:8000/books/4/Stuff/urdang/erik/2018-04-02
 // - DELETE	Delete a book by ISBN	http://localhost:8000/books/0451527127
-// - PUT	Update a book by ISBN	http://localhost:8000/books/4/Stuff and Nonsense/urdang/erik/2018-04-02
+// - POST	Update a book by ISBN	http://localhost:8000/books/4/Stuff and Nonsense/urdang/erik/2018-04-02
 
 
 import (
