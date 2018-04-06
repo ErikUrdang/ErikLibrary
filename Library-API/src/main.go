@@ -15,6 +15,27 @@ package main
 // - POST	Update a book by ISBN	http://localhost:8000/books/4/Stuff and Nonsense/urdang/erik/2018-04-02
 
 
+// Instructions
+//
+//Create a CRUD API to manage a list of Books, fulfilling the following requirements:
+// 
+//1. Books should have the following Attributes:
+// 
+//- Title
+//- Author
+//- Publisher
+//- Publish Date
+//- Rating (1-3)
+//- Status (CheckedIn, CheckedOut)
+// 
+//2. Each endpoint should have test coverage of both successful and failed requests.
+// 
+//3. Use a data store of your choice
+// 
+//4. The project should be deployable via Kubernetes
+// 
+//5. Send the project along as a .git repository
+
 import (
     "encoding/json"
     "log"
@@ -30,11 +51,14 @@ import (
 // Book is the base element in this system.
 
 type Book struct {
-    ISBN        string  	`json:"ISBN,omitempty"`
+    Title   	string 		`json:"title,omitempty"`
     AuthorFirst string   	`json:"authorFirst,omitempty"`
     AuthorLast  string   	`json:"authorLast,omitempty"`
-    Title   	string 		`json:"title,omitempty"`
+    Publisher	string   	`json:"publisher,omitempty"`
     PubDate		time.Time 	`json:"pubdate,omitempty"`
+    Rating      int		  	`json:"rating,omitempty"`
+    CheckedOut  bool	  	`json:"checkedOut,omitempty"`
+    ISBN        string  	`json:"ISBN,omitempty"`
 }
 
 
@@ -52,7 +76,7 @@ func GetBooks(w http.ResponseWriter, r *http.Request) {
 // Return one book matching the supplied ISBN if found. If not, just encode a string with notification.
 
 func GetBook(w http.ResponseWriter, r *http.Request) {
-	fmt.Printf("Getting one book....\n")
+	fmt.Printf("Getting one book....Hi!\n")
 	//t := time.Now()
     params := mux.Vars(r)
     isbn := params["ISBN"]
@@ -163,8 +187,24 @@ func CreateSampleBooks() {
 	ws, _ := time.Parse("2006-01-02", "1623-01-01")
 	sk, _ := time.Parse("2006-01-02", "1986-09-05")
 	
-	books = append(books, Book{ISBN: "0451527127", AuthorFirst: "William", AuthorLast: "Shakespeare", Title: "Tempest, The", PubDate: ws})
-    books = append(books, Book{ISBN: "1444707868", AuthorFirst: "Stephen", AuthorLast: "King", Title: "It", PubDate: sk})
+	books = append(books, 
+		Book{
+			ISBN: "0451527127", 
+			AuthorFirst: "William", 
+			AuthorLast: "Shakespeare", 
+			Title: "Tempest, The", 
+			PubDate: ws, 
+			Rating: 1, 
+			CheckedOut: true})
+    books = append(books, 
+    	Book{
+    		ISBN: "1444707868", 
+    		AuthorFirst: "Stephen", 
+    		AuthorLast: "King", 
+    		Title: "It", 
+    		PubDate: sk, 
+			Rating: 2, 
+    		CheckedOut: false})
 
 }
 
