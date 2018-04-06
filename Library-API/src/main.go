@@ -43,6 +43,7 @@ import (
     "mux"
     "time"
     "fmt"
+    "strconv"
 )
 
 
@@ -52,8 +53,7 @@ import (
 
 type Book struct {
     Title   	string 		`json:"title,omitempty"`
-    AuthorFirst string   	`json:"authorFirst,omitempty"`
-    AuthorLast  string   	`json:"authorLast,omitempty"`
+    Author		string   	`json:"author,omitempty"`
     Publisher	string   	`json:"publisher,omitempty"`
     PubDate		time.Time 	`json:"pubdate,omitempty"`
     Rating      int		  	`json:"rating,omitempty"`
@@ -100,6 +100,11 @@ func CreateBook(w http.ResponseWriter, r *http.Request) {
     
 	fmt.Printf("Creating one book - parameters = %s\n", params)
     
+	ok, errStr := ValidateBookValues (r)
+	if (! ok) {
+	    json.NewEncoder(w).Encode("Error: " + errStr)		
+	}
+
     var book Book
     _ = json.NewDecoder(r.Body).Decode(&book)
     
@@ -122,17 +127,37 @@ func FindBook (isbn string, w http.ResponseWriter, r *http.Request) (int) {
 	return -1
 }
 
+func ValidateBookValues (r *http.Request) (bool, string) {
+    params := mux.Vars(r)
+
+	fmt.Printf("Validating book values - parameters = %s\n", params)
+
+	rating, err := strconv.Atoi(params["rating"])
+	if (err != nil || rating < 1 || rating > 3) {
+		return false, "Bad rating = " + (params["rating"])
+	}
+	_, err = strconv.ParseBool(params["checkedOut"])
+	if (err != nil) {return false, "Bad boolean value"}
+	
+	// All tests passed:
+	
+	return true, "good"
+}
+
 // Update the values of the book at the index specified.
 
 func AssignBookValues (index int, r *http.Request){
-	fmt.Printf ("Before assigning values: (%s)\n", books[index])
+	// fmt.Printf ("Before assigning values: (%s)\n", books[index])
+	
     params := mux.Vars(r)
     books[index].ISBN = params["ISBN"]
-    books[index].AuthorLast = params["authorLast"]
-    books[index].AuthorFirst = params["authorFirst"]
+    books[index].Author = params["author"]
     books[index].PubDate, _ = time.Parse("2006-01-02", params["date"])
+    books[index].Rating, _ = strconv.Atoi(params["rating"])
+    books[index].Publisher = params["publisher"]
     books[index].Title = params["title"]
-	fmt.Printf ("After assigning values: (%s in %s)\n", books[index], books)
+    books[index].CheckedOut, _ = strconv.ParseBool (params["checkedOut"])
+	// fmt.Printf ("After assigning values: (%s in %s)\n", books[index], books)
 }
 
 func UpdateBook(w http.ResponseWriter, r *http.Request) {
@@ -140,9 +165,16 @@ func UpdateBook(w http.ResponseWriter, r *http.Request) {
     params := mux.Vars(r)
     
 	fmt.Printf("Updating one book - parameters = %s\n", params)
+	
+	ok, errStr := ValidateBookValues (r)
+	if (! ok) {
+	    json.NewEncoder(w).Encode("Error: " + errStr)		
+	}
 	index := FindBook (params["ISBN"], w, r)
 	if (index < 0) {
 		fmt.Printf ("No matching book")
+	    json.NewEncoder(w).Encode("No matching book")
+		
 	} else {
 		fmt.Printf ("Found it! (%s)\n", books[index])
 		AssignBookValues (index, r)
@@ -190,8 +222,7 @@ func CreateSampleBooks() {
 	books = append(books, 
 		Book{
 			ISBN: "0451527127", 
-			AuthorFirst: "William", 
-			AuthorLast: "Shakespeare", 
+			Author: "William Shakespeare", 
 			Title: "Tempest, The", 
 			PubDate: ws, 
 			Rating: 1, 
@@ -199,8 +230,7 @@ func CreateSampleBooks() {
     books = append(books, 
     	Book{
     		ISBN: "1444707868", 
-    		AuthorFirst: "Stephen", 
-    		AuthorLast: "King", 
+    		Author: "Stephen King", 
     		Title: "It", 
     		PubDate: sk, 
 			Rating: 2, 
@@ -222,8 +252,8 @@ func main() {
     
     router.HandleFunc("/books", GetBooks).Methods("GET")
     router.HandleFunc("/books/{ISBN}", GetBook).Methods("GET")
-    router.HandleFunc("/books/{ISBN}/{title}/{authorLast}/{authorFirst}/{date}", CreateBook).Methods("POST")
-    router.HandleFunc("/books/{ISBN}/{title}/{authorLast}/{authorFirst}/{date}", UpdateBook).Methods("PUT")
+    router.HandleFunc("/books/{ISBN}/{title}/{author}/{date}/{publisher}/{rating}/{checkedOut}", CreateBook).Methods("POST")
+    router.HandleFunc("/books/{ISBN}/{title}/{author}/{date}/{publisher}/{rating}/{checkedOut}", UpdateBook).Methods("PUT")
     router.HandleFunc("/books/{ISBN}", DeleteBook).Methods("DELETE")
     
     log.Fatal(http.ListenAndServe(":8000", router))
